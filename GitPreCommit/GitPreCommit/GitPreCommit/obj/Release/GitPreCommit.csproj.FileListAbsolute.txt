@@ -1,0 +1,12 @@
+e:\work\Others\GitHook\GitPreCommit\GitPreCommit\GitPreCommit\obj\Release\GitPreCommit.csproj.AssemblyReference.cache
+e:\work\Others\GitHook\GitPreCommit\GitPreCommit\GitPreCommit\obj\Release\GitPreCommit.PreCommitForm.resources
+e:\work\Others\GitHook\GitPreCommit\GitPreCommit\GitPreCommit\obj\Release\GitPreCommit.Properties.Resources.resources
+e:\work\Others\GitHook\GitPreCommit\GitPreCommit\GitPreCommit\obj\Release\GitPreCommit.csproj.GenerateResource.cache
+e:\work\Others\GitHook\GitPreCommit\GitPreCommit\GitPreCommit\obj\Release\GitPreCommit.csproj.CoreCompileInputs.cache
+e:\work\Others\GitHook\GitPreCommit\GitPreCommit\GitPreCommit\bin\Release\GitPreCommit.exe.config
+e:\work\Others\GitHook\GitPreCommit\GitPreCommit\GitPreCommit\bin\Release\GitPreCommit.exe
+e:\work\Others\GitHook\GitPreCommit\GitPreCommit\GitPreCommit\bin\Release\GitPreCommit.pdb
+e:\work\Others\GitHook\GitPreCommit\GitPreCommit\GitPreCommit\bin\Release\FbxSharp.dll
+e:\work\Others\GitHook\GitPreCommit\GitPreCommit\GitPreCommit\obj\Release\GitPreCo.B9C4D8AF.Up2Date
+e:\work\Others\GitHook\GitPreCommit\GitPreCommit\GitPreCommit\obj\Release\GitPreCommit.exe
+e:\work\Others\GitHook\GitPreCommit\GitPreCommit\GitPreCommit\obj\Release\GitPreCommit.pdb

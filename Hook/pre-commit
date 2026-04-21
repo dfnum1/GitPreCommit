@@ -1,0 +1,137 @@
+#!/bin/sh
+# ==============================================
+# Git pre-commit Hook - 资源文件检测
+# ==============================================
+# 在 pre-commit 阶段检测本次提交中新增或修改的资源文件：
+#   1. FBX 文件面数检测（超过4万面则阻止提交）
+#   2. 贴图文件尺寸检测（宽或高超过4096则阻止提交）
+# 用法：将此文件拷贝到 .git/hooks/ 目录下，并将
+#       GitPreCommit.exe 及 FbxSharp.dll 也放到 .git/hooks/ 目录下
+# ==============================================
+
+if git rev-parse --verify HEAD >/dev/null 2>&1
+then
+	against=HEAD
+else
+	# Initial commit: diff against an empty tree object
+	against=$(git hash-object -t tree /dev/null)
+fi
+
+# If you want to allow non-ASCII filenames set this variable to true.
+# Default to true to support Chinese filenames
+allownonascii=$(git config --type=bool hooks.allownonascii || echo "true")
+
+# Redirect output to stderr.
+exec 1>&2
+
+# Cross platform projects tend to avoid non-ASCII filenames; prevent
+# them from being added to the repository. We exploit the fact that the
+# printable range starts at the space character and ends with tilde.
+if [ "$allownonascii" != "true" ] &&
+	# Note that the use of brackets around a tr range is ok here, (it's
+	# even required, for portability to Solaris 10's /usr/bin/tr), since
+	# the square bracket bytes happen to fall in the designated range.
+	test $(git diff-index --cached --name-only --diff-filter=A -z $against |
+	  LC_ALL=C tr -d '[ -~]\0' | wc -c) != 0
+then
+	cat <<\EOF
+Error: Attempt to add a non-ASCII file name.
+
+This can cause problems if you want to work with people on other platforms.
+
+To be portable it is advisable to rename the file.
+
+If you know what you are doing you can disable this check using:
+
+  git config hooks.allownonascii true
+EOF
+	exit 1
+fi
+
+# If there are whitespace errors, print the offending file names and fail.
+git diff-index --check --cached $against --
+
+# ==============================================
+# 资源文件检测（FBX 面数 & 贴图尺寸）
+# 仅在 Windows 平台下执行检测
+# ==============================================
+
+# 检测操作系统，非 Windows 平台跳过资源检测
+case "$(uname -s)" in
+    MINGW*|MSYS*|CYGWIN*|Windows_NT*)
+        # Windows 平台，继续执行检测
+        ;;
+    *)
+        # 非 Windows 平台，跳过资源检测
+        exit 0
+        ;;
+esac
+
+# 获取仓库根目录
+REPO_ROOT=$(git rev-parse --show-toplevel)
+
+# 获取本次提交中新增(A)或修改(M)的所有文件
+# -c core.quotepath=false: 禁止对非 ASCII 文件名进行转义（支持中文文件名）
+# tr -d '\r': 去除 Windows 环境下可能存在的 \r 字符
+CHANGED_FILES=$(git -c core.quotepath=false diff --cached --name-only --diff-filter=AM | tr -d '\r')
+
+if [ -z "$CHANGED_FILES" ]; then
+    exit 0
+fi
+
+# 筛选 FBX 文件（|| true 防止 grep 无匹配时返回非零退出码）
+FBX_FILES=$(echo "$CHANGED_FILES" | grep -i '\.fbx$' || true)
+
+# 筛选贴图文件（常见纹理格式）
+TEX_FILES=$(echo "$CHANGED_FILES" | grep -iE '\.(png|jpg|jpeg|bmp|tif|tiff|tga|psd|exr)$' || true)
+
+# 如果没有需要检测的文件，直接通过
+if [ -z "$FBX_FILES" ] && [ -z "$TEX_FILES" ]; then
+    exit 0
+fi
+
+echo "[Asset Check] 检测到资源文件变更，正在检查..."
+
+# 创建临时文件用于传递文件列表给 C# 程序
+TMP_FILE="$REPO_ROOT/.git/tmp_asset_filelist.txt"
+: > "$TMP_FILE"
+
+# 写入 FBX 文件路径（带 [FBX] 标记）
+if [ -n "$FBX_FILES" ]; then
+    echo "$FBX_FILES" | while IFS= read -r file; do
+        if [ -n "$file" ]; then
+            echo "[FBX]$REPO_ROOT/$file" >> "$TMP_FILE"
+        fi
+    done
+fi
+
+# 写入贴图文件路径（带 [TEX] 标记）
+if [ -n "$TEX_FILES" ]; then
+    echo "$TEX_FILES" | while IFS= read -r file; do
+        if [ -n "$file" ]; then
+            echo "[TEX]$REPO_ROOT/$file" >> "$TMP_FILE"
+        fi
+    done
+fi
+
+# 获取 hook 所在目录
+HOOK_DIR=$(dirname "$0")
+
+# 将临时文件路径转换为 Windows 路径（兼容 Git Bash 的 MSYS 路径）
+WIN_TMP_FILE=$(cygpath -w "$TMP_FILE" 2>/dev/null || echo "$TMP_FILE")
+
+# 调用 C# 检测程序，传入临时文件路径
+"$HOOK_DIR/Tools/GitPreCommit.exe" "$WIN_TMP_FILE"
+CHECK_RESULT=$?
+
+# 清理临时文件
+rm -f "$TMP_FILE"
+
+if [ $CHECK_RESULT -ne 0 ]; then
+    echo "[Asset Check] 资源检测未通过，提交已中止！"
+    exit 1
+fi
+
+echo "[Asset Check] 资源检测通过。"
+
+exit 0

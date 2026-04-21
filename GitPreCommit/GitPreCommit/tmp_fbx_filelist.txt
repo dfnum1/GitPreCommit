@@ -1,0 +1,5 @@
+[FBX]D:/work_source/github/PolygonNavMesh/Assets/Scenes/map_build_engine_windcastle.fbx
+[TEX]D:/work_source/github/PolygonNavMesh/Assets/Scenes/未标题-1.jpg
+[TEX]D:/work_source/github/PolygonNavMesh/Assets/Scenes/未标题-1.png
+[TEX]D:/work_source/github/PolygonNavMesh/Assets/Scenes/未标题-1.tga
+[TEX]D:/work_source/github/PolygonNavMesh/Assets/Scenes/未标题-1.psd
