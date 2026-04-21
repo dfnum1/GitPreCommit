@@ -1,2 +1,2 @@
 # GitPreCommit
-git 体检检测hook
+git 提交检测hook
